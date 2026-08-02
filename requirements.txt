@@ -1,0 +1,12 @@
+﻿fastapi
+uvicorn[standard]
+python-multipart
+pydantic
+pdfplumber
+openpyxl
+xlrd
+xlwt
+xlutils
+google-genai
+google-auth
+aiofiles

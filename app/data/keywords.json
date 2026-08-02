@@ -1,0 +1,67 @@
+{
+    "SoChungTuNgoai": [
+        "Số\\s*\\(?Invoice\\s*No\\.?\\)?\\s*:?\\s*(\\d+)",
+        "Invoice\\s*No\\.?\\s*[:\\)]\\s*(\\d+)",
+        "(?<!bằng\\s)(?<!bằng\\s\\s)(?<!trị\\s)(?<!mã\\s)(?<!mã\\s\\s)Số(?!\\s*lượng)(?!\\s*điện\\s*thoại)(?!\\s*tài\\s*khoản)(?!\\s*mã)(?!\\s*mst)(?:\\s*hóa\\s*đơn|)\\s*.*?(?::|\\s)\\s*(\\d{5,8})",
+        "(?<!bằng\\s)(?<!bằng\\s\\s)Số(?!\\s*lượng)\\s*:?\\s*(?:\\(No\\.?\\))?\\s*:?\\s*(\\d+)",
+        "Số\\s*hóa\\s*đơn\\s*:?\\s*(\\d+)",
+        "Số\\s*bill\\s*\\(?Bill\\s*No\\.?\\)?\\s*:?\\s*(\\d+)",
+        "Invoice\\s*No\\.?\\s*:?\\s*(\\d+)",
+        "(?<!bằng\\s)(?<!bằng\\s\\s)(?<!trị\\s)(?<!mã\\s)(?<!mã\\s\\s)Số(?!\\s*lượng)(?!\\s*mã\\s*số\\s*thuế)(?!\\s*mst)(?:\\s*hóa\\s*đơn|)\\s*.*?(?::|\\s)\\s*(\\d{1,8})",
+        "(?<!bằng\\s)(?<!bằng\\s\\s)Số(?!\\s*lượng)(?: hóa đơn|)\\s*.*?(?::|\\s)\\s*(\\d{5,8})",
+        "Số(?: hóa đơn|)\\s*.*?(?::|\\s)\\s*(\\d{5,8})"
+    ],
+    "KyHieu": [
+        "Ký\\s*hiệu\\s*(?:\\(Serial\\s*No\\.?\\)|\\(Serial\\))?\\s*:?\\s*([A-Z0-9]+)",
+        "Ký\\s*hiệu\\s*:?\\s*([A-Z0-9]+)",
+        "Serial\\s*No\\.?\\s*:?\\s*([A-Z0-9]+)",
+        "Ký hiệu.*?(1C[A-Z0-9]+)",
+        "Ký hiệu.*?(1K[A-Z0-9]+)",
+        "Ký hiệu.*?(2C[A-Z0-9]+)"
+    ],
+    "NgayChungTu": [
+        "Ngày\\s*(?:\\([^)]*\\))?\\s*(\\d{1,2})\\s*tháng\\s*(?:\\([^)]*\\))?\\s*(\\d{1,2})\\s*năm\\s*(?:\\([^)]*\\))?\\s*(\\d{4})",
+        "Ngày\\s*\\(?Date\\)?\\s*(\\d{1,2})\\s*tháng\\s*\\(?month\\)?\\s*(\\d{1,2})\\s*năm\\s*\\(?year\\)?\\s*(\\d{4})",
+        "Ngày\\s*(\\d{1,2})/(\\d{1,2})/(\\d{4})",
+        "Date\\s*:?\\s*(\\d{1,2})/(\\d{1,2})/(\\d{4})",
+        "Ngày\\s*:?\\s*(\\d{1,2})/(\\d{1,2})/(\\d{4})",
+        "Ngày\\s*(\\d{1,2})\\s*tháng\\s*(\\d{1,2})\\s*năm\\s*(\\d{4})"
+    ],
+    "MaSoThue": [
+        "Mã\\s*số\\s*thuế\\s*(?:\\(Tax\\s*code\\))?\\s*:?\\s*([0-9-]+)",
+        "MST\\s*:?\\s*([0-9-]+)",
+        "Tax\\s*code\\s*:?\\s*([0-9-]+)",
+        "Mã số thuế.*?([\\d\\s-]{10,25})"
+    ],
+    "ThanhTien_Keywords": [
+        "tổng cộng",
+        "tổng cộng tiền thanh toán",
+        "tổng tiền chịu thuế suất",
+        "tổng cộng (total amount)",
+        "cộng tiền thanh toán",
+        "thành tiền",
+        "tổng thanh toán",
+        "tổng cộng tiền hàng",
+        "tổng tiền thanh toán",
+        "tổng cộng (grand total)",
+        "tổng số tiền",
+        "tổng tiền",
+        "tổng cộng (payment)",
+        "grand total",
+        "total amount",
+        "total payment"
+    ],
+    "NhaCungCap_Keywords": [
+        "đơn vị bán hàng",
+        "tên đơn vị",
+        "tên công ty",
+        "công ty",
+        "nhà cung cấp",
+        "đơn vị cung cấp",
+        "seller"
+    ],
+    "DiaChi_Keywords": [
+        "địa chỉ",
+        "address"
+    ]
+}

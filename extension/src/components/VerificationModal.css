@@ -198,3 +198,47 @@
 .btn-primary:hover {
   background-color: var(--color-primary-dark);
 }
+
+/* ── Stacked Tax Amounts Layout ── */
+.tax-amounts-row {
+  display: flex;
+  gap: 10px;
+}
+
+.tax-rates-row {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.pdf-canvas-viewer {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  touch-action: pan-x pan-y pinch-zoom;
+  position: relative;
+  background: #525659;
+}
+
+.pdf-canvas-viewer canvas {
+  max-width: 100%;
+  height: auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  transition: transform 0.1s ease-out;
+  transform-origin: top center;
+}
+
+@media (max-width: 600px) {
+  .tax-amounts-row {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  
+  .tax-rates-row {
+    gap: 8px 12px !important;
+  }
+}

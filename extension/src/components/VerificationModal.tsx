@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './VerificationModal.css';
 
 interface VerificationModalProps {
@@ -30,9 +30,96 @@ const VerificationModal: React.FC<VerificationModalProps> = ({ file, mode, model
   ]);
 
   const [logs, setLogs] = useState<string[]>([]);
+  
+  // PDF Canvas & Touch Pinch Zoom State
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [pdfRendered, setPdfRendered] = useState(false);
+  const [zoomScale, setZoomScale] = useState(1);
+  const touchStartDist = useRef<number | null>(null);
 
   const addLog = (msg: string) => {
     setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
+  };
+
+  // PDF.js Canvas Renderer for direct mobile/desktop viewing
+  useEffect(() => {
+    if (!file.type.includes('pdf') && !file.name.toLowerCase().endsWith('.pdf')) return;
+    
+    let isMounted = true;
+    const loadAndRenderPdf = async () => {
+      try {
+        if (!(window as any).pdfjsLib) {
+          await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+            script.onload = () => {
+              (window as any).pdfjsLib.GlobalWorkerOptions.workerSrc = 
+                'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+              resolve(true);
+            };
+            script.onerror = reject;
+            document.head.appendChild(script);
+          });
+        }
+
+        const pdfjsLib = (window as any).pdfjsLib;
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const page = await pdf.getPage(1);
+
+        if (!isMounted || !canvasRef.current) return;
+
+        const canvas = canvasRef.current;
+        const context = canvas.getContext('2d');
+        const viewport = page.getViewport({ scale: 1.6 });
+
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        const renderContext = {
+          canvasContext: context,
+          viewport: viewport,
+        };
+        await page.render(renderContext).promise;
+        if (isMounted) setPdfRendered(true);
+      } catch (e) {
+        console.error("PDF.js render error:", e);
+        if (isMounted) setPdfRendered(false);
+      }
+    };
+
+    loadAndRenderPdf();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [file]);
+
+  // Pinch-to-zoom touch gesture listeners
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      touchStartDist.current = dist;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && touchStartDist.current !== null) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const factor = dist / touchStartDist.current;
+      setZoomScale(prev => Math.min(Math.max(prev * (1 + (factor - 1) * 0.1), 0.8), 3.5));
+      touchStartDist.current = dist;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    touchStartDist.current = null;
   };
 
   useEffect(() => {
@@ -188,14 +275,42 @@ const VerificationModal: React.FC<VerificationModalProps> = ({ file, mode, model
         </div>
         
         <div className="modal-body">
-          {/* Split-View Left: Document Viewer */}
+          {/* Split-View Left: Document Viewer with HTML5 Canvas / Img & Touch Pinch-Zoom */}
           <div className="document-viewer">
             {file.name.toLowerCase().endsWith('.xml') ? (
               <iframe src={fileUrl} title="XML Preview" className="preview-frame" style={{ width: '100%', height: '100%', border: 'none', background: '#f9f9f9' }} />
-            ) : file.type === 'application/pdf' ? (
-              <iframe src={`${fileUrl}#toolbar=0`} title="PDF Preview" className="preview-frame" />
+            ) : file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf') ? (
+              <div 
+                className="pdf-canvas-viewer"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
+                <canvas 
+                  ref={canvasRef} 
+                  style={{ 
+                    transform: `scale(${zoomScale})`, 
+                    display: pdfRendered ? 'block' : 'none' 
+                  }} 
+                />
+                {!pdfRendered && (
+                  <iframe src={`${fileUrl}#toolbar=0`} title="PDF Fallback Preview" className="preview-frame" />
+                )}
+              </div>
             ) : (
-              <img src={fileUrl} alt="Preview" className="preview-image" />
+              <div 
+                className="pdf-canvas-viewer"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
+                <img 
+                  src={fileUrl} 
+                  alt="Preview" 
+                  className="preview-image" 
+                  style={{ transform: `scale(${zoomScale})`, transition: 'transform 0.1s ease-out' }} 
+                />
+              </div>
             )}
           </div>
 
@@ -322,7 +437,7 @@ const VerificationModal: React.FC<VerificationModalProps> = ({ file, mode, model
                   )}
                   <div className="form-group">
                     <label>Thuế suất (%)</label>
-                    <div style={{display: 'flex', gap: '15px', alignItems: 'center'}}>
+                    <div className="tax-rates-row">
                       <label style={{fontWeight: 'normal', margin: 0}}><input type="radio" name={`tax_${line.id}`} value="5" checked={line.rate === '5'} onChange={e => handleTaxChange(line.id, 'rate', e.target.value)} /> 5%</label>
                       <label style={{fontWeight: 'normal', margin: 0}}><input type="radio" name={`tax_${line.id}`} value="8" checked={line.rate === '8'} onChange={e => handleTaxChange(line.id, 'rate', e.target.value)} /> 8%</label>
                       <label style={{fontWeight: 'normal', margin: 0}}><input type="radio" name={`tax_${line.id}`} value="10" checked={line.rate === '10'} onChange={e => handleTaxChange(line.id, 'rate', e.target.value)} /> 10%</label>
@@ -333,7 +448,7 @@ const VerificationModal: React.FC<VerificationModalProps> = ({ file, mode, model
                     </div>
                   </div>
                   
-                  <div style={{display: 'flex', gap: '10px'}}>
+                  <div className="tax-amounts-row">
                     <div className="form-group" style={{flex: 1}}>
                       <label>Tiền trước thuế</label>
                       <input type="text" value={line.preTax} onChange={e => handleTaxChange(line.id, 'preTax', e.target.value)} />

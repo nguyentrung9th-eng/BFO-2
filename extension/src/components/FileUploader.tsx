@@ -117,24 +117,23 @@ const FileUploader: React.FC<FileUploaderProps> = ({ files, setFiles, onFilesCha
           <ul className="file-list">
             {files.map((f, i) => (
               <li key={i} className="file-item">
-                <span className="file-name">{f.name}</span>
+                <span className="file-name">📄 {f.name}</span>
                 <div className="file-actions">
                   <button
-                    className="btn-primary"
-                    style={{ padding: '0.25rem 0.5rem', marginRight: '0.5rem' }}
+                    className="btn-confirm"
                     onClick={() => {
                       if ((window as any).openModal) {
                         (window as any).openModal(f);
                       }
                     }}
                   >
-                    Xác nhận
+                    ✓ Xác nhận
                   </button>
                   <button
                     className="btn-remove"
                     onClick={() => removeFile(f.name)}
                   >
-                    Xóa
+                    ✕
                   </button>
                 </div>
               </li>

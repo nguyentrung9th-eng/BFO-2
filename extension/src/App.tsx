@@ -148,22 +148,21 @@ function App() {
           onFilesChanged={() => setExtractedInvoices([])}
         />
         
-        <div style={{ marginTop: '20px', display: 'flex', gap: '15px' }}>
+        <div className="action-row">
           <button 
             className="btn-primary" 
-            style={{ flex: 1, padding: '12px', fontSize: '16px', background: '#007bff' }}
             onClick={handleStartScanning}
           >
-            Bắt đầu quét {extractedInvoices.length > 0 ? `(${extractedInvoices.length}/${files.length})` : ''}
+            🔍 Bắt đầu quét {extractedInvoices.length > 0 ? `(${extractedInvoices.length}/${files.length})` : ''}
           </button>
           
           {extractedInvoices.length > 0 && (
             <button 
               className="btn-primary" 
-              style={{ flex: 1, padding: '12px', fontSize: '16px', background: '#28a745' }}
+              style={{ background: 'var(--color-success)' }}
               onClick={triggerExportDialog}
             >
-              Xuất File Excel kết quả ({extractedInvoices.length})
+              📥 Xuất Excel ({extractedInvoices.length})
             </button>
           )}
         </div>
@@ -171,40 +170,36 @@ function App() {
 
       {/* Export Filename Modal */}
       {showExportModal && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ width: '540px', padding: '20px' }}>
-            <div className="modal-header">
-              <h2>Xuất File Excel</h2>
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) { setShowExportModal(false); setExtractedInvoices([]); } }}>
+          <div className="export-modal">
+            <div className="export-modal-header">
+              <h2>📥 Xuất File Excel</h2>
               <button className="btn-close" onClick={() => {
                 setShowExportModal(false);
                 setExtractedInvoices([]);
               }}>&times;</button>
             </div>
 
-            {/* Gợi ý lưu file trên WebApp */}
-            <div style={{ margin: '16px 0 12px', background: '#e7f5ff', padding: '10px 12px', borderRadius: '6px', border: '1px solid #bde0fe' }}>
-              <p style={{ margin: 0, fontSize: '13px', color: '#0056b3', fontWeight: '500' }}>
-                📥 File Excel sẽ tự động được tải xuống thư mục <strong>Downloads (Tải về)</strong> của trình duyệt sau khi xuất.
-              </p>
+            <div className="export-info-box">
+              <p>📂 File Excel sẽ tự động tải xuống thư mục <strong>Downloads</strong> của trình duyệt.</p>
             </div>
 
-            {/* Tên file */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px' }}>Tên file xuất (.xlsx):</label>
+            <div className="export-field">
+              <label>Tên file xuất (.xlsx)</label>
               <input
                 type="text"
                 value={customFileName}
                 onChange={(e) => setCustomFileName(e.target.value)}
-                style={{ width: '100%', padding: '9px 10px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
+                placeholder="Nhập tên file..."
               />
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+            <div className="export-modal-footer">
               <button className="btn-secondary" onClick={() => {
                 setShowExportModal(false);
                 setExtractedInvoices([]);
-              }} style={{ padding: '8px 16px' }}>Hủy</button>
-              <button className="btn-primary" onClick={handleExecuteExport} style={{ padding: '8px 16px', background: '#28a745' }}>💾 Lưu &amp; Xuất Excel</button>
+              }}>Hủy</button>
+              <button className="btn-primary" onClick={handleExecuteExport} style={{ background: 'var(--color-success)' }}>💾 Lưu &amp; Xuất</button>
             </div>
           </div>
         </div>
@@ -250,41 +245,10 @@ function App() {
       )}
 
       {/* Online Users Badge */}
-      <div style={{
-        position: 'fixed',
-        bottom: '15px',
-        left: '15px',
-        background: 'rgba(0, 0, 0, 0.75)',
-        color: '#fff',
-        padding: '6px 12px',
-        borderRadius: '20px',
-        fontSize: '13px',
-        fontWeight: '500',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        zIndex: 9999,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-        backdropFilter: 'blur(4px)'
-      }}>
-        <div style={{
-          width: '8px',
-          height: '8px',
-          background: '#4ade80',
-          borderRadius: '50%',
-          boxShadow: '0 0 6px #4ade80',
-          animation: 'pulse 2s infinite'
-        }}></div>
+      <div className="online-badge">
+        <div className="online-dot" />
         {onlineUsers} đang online
       </div>
-
-      <style>{`
-        @keyframes pulse {
-          0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
-          70% { box-shadow: 0 0 0 6px rgba(74, 222, 128, 0); }
-          100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
-        }
-      `}</style>
     </div>
   );
 }

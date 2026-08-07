@@ -78,12 +78,18 @@ function App() {
     }
   };
 
+  // Export Form Options State
+  const [exportOptions, setExportOptions] = useState<{ trichPhi: boolean; bfoThanhToan: boolean }>({
+    trichPhi: true,
+    bfoThanhToan: true
+  });
+
   const triggerExportDialog = async () => {
     if (extractedInvoices.length === 0) {
       alert("Chưa có hóa đơn nào được xác nhận!");
       return;
     }
-    // Gợi ý tên file mặc định: {Tên người thực hiện}_Nhập BFO_Chi phí tiếp khách Tháng {Tháng/Năm}.xlsx
+    // Gợi ý tên file mặc định: {Tên người thực hiện}_Trích phí_Chi phí tiếp khách Tháng {Tháng/Năm}.xlsx
     let monthYear = "07.2026";
     if (extractedInvoices.length > 0 && extractedInvoices[0].NgayChungTu) {
       const parts = extractedInvoices[0].NgayChungTu.split('/');
@@ -91,7 +97,7 @@ function App() {
         monthYear = parts.length === 3 ? `${parts[1].padStart(2, '0')}.${parts[2]}` : extractedInvoices[0].NgayChungTu;
       }
     }
-    const defaultName = `${globalConfig.TenNguoiThucHien || 'Viết Trung'}_Nhập BFO_Chi phí tiếp khách Tháng ${monthYear}`;
+    const defaultName = `${globalConfig.TenNguoiThucHien || 'Viết Trung'}_Trích phí_Chi phí tiếp khách Tháng ${monthYear}`;
     setCustomFileName(defaultName);
 
     // Lấy Desktop path mặc định nếu chưa có savePath
@@ -103,31 +109,64 @@ function App() {
     setShowExportModal(true);
   };
 
+  const downloadFile = (blob: Blob, fileName: string) => {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  };
+
   const handleExecuteExport = async () => {
     if (!customFileName.trim()) {
       alert("Vui lòng nhập tên file xuất!");
       return;
     }
+    if (!exportOptions.trichPhi && !exportOptions.bfoThanhToan) {
+      alert("Vui lòng chọn ít nhất 1 mẫu file trả kết quả!");
+      return;
+    }
 
-    const finalFileName = customFileName.toLowerCase().endsWith('.xlsx') ? customFileName.trim() : `${customFileName.trim()}.xlsx`;
+    const baseName = customFileName.replace(/\.(xlsx|xls)$/i, '').trim();
+    let successCount = 0;
+    const exportedNames: string[] = [];
 
-    const { success, blob, error } = await exportExcel(extractedInvoices, globalConfig, finalFileName);
+    // 1. Xuất File Trích phí (nếu được chọn)
+    if (exportOptions.trichPhi) {
+      const fileName = `${baseName}.xlsx`;
+      const { success, blob, error } = await exportExcel(extractedInvoices, globalConfig, fileName, "trich_phi");
+      if (success && blob) {
+        downloadFile(blob, fileName);
+        successCount++;
+        exportedNames.push(fileName);
+      } else {
+        alert(`❌ Lỗi xuất File Trích phí: ${error || "Không xác định"}`);
+      }
+    }
 
-    if (success && blob) {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = finalFileName;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+    // 2. Xuất File Nhập BFO thanh toán (nếu được chọn)
+    if (exportOptions.bfoThanhToan) {
+      const bfoBaseName = baseName.includes("Trích phí") 
+        ? baseName.replace("Trích phí", "Nhập BFO thanh toán") 
+        : `${baseName}_BFO`;
+      const fileName = `${bfoBaseName}.xls`;
+      const { success, blob, error } = await exportExcel(extractedInvoices, globalConfig, fileName, "bfo_thanh_toan");
+      if (success && blob) {
+        downloadFile(blob, fileName);
+        successCount++;
+        exportedNames.push(fileName);
+      } else {
+        alert(`❌ Lỗi xuất File Nhập BFO thanh toán: ${error || "Không xác định"}`);
+      }
+    }
 
+    if (successCount > 0) {
       setShowExportModal(false);
       setExtractedInvoices([]);
-      alert(`✅ Đã xuất và tải thành công file Excel: ${finalFileName}`);
-    } else {
-      alert("❌ " + (error || "Lỗi xuất Excel không xác định"));
+      alert(`✅ Đã xuất và tải thành công ${successCount} file Excel:\n• ` + exportedNames.join('\n• '));
     }
   };
 
@@ -147,6 +186,45 @@ function App() {
           setFiles={setFiles} 
           onFilesChanged={() => setExtractedInvoices([])}
         />
+
+        {/* ── Selector mẫu trả kết quả ── */}
+        <div className="export-options-selector" style={{ 
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
+          borderRadius: '8px',
+          padding: '10px 14px',
+          margin: '12px 0 6px 0',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px',
+          flexWrap: 'wrap'
+        }}>
+          <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--color-text)' }}>📋 Mẫu file trả kết quả:</span>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem', cursor: 'pointer', userSelect: 'none' }}>
+            <input 
+              type="checkbox" 
+              checked={exportOptions.trichPhi}
+              onChange={(e) => {
+                if (!e.target.checked && !exportOptions.bfoThanhToan) return;
+                setExportOptions(prev => ({ ...prev, trichPhi: e.target.checked }));
+              }}
+              style={{ width: '16px', height: '16px', accentColor: 'var(--color-primary)' }}
+            />
+            📄 File Trích phí
+          </label>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem', cursor: 'pointer', userSelect: 'none' }}>
+            <input 
+              type="checkbox" 
+              checked={exportOptions.bfoThanhToan}
+              onChange={(e) => {
+                if (!e.target.checked && !exportOptions.trichPhi) return;
+                setExportOptions(prev => ({ ...prev, bfoThanhToan: e.target.checked }));
+              }}
+              style={{ width: '16px', height: '16px', accentColor: 'var(--color-primary)' }}
+            />
+            📊 File Nhập BFO thanh toán
+          </label>
+        </div>
         
         <div className="action-row">
           <button 

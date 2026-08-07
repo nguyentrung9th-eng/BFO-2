@@ -3,21 +3,34 @@ import re
 import unicodedata
 import openpyxl
 
+def to_cp1252_str(text: str) -> str:
+    """
+    Chuẩn hóa chuỗi văn bản về 100% ký tự tương thích Code Page 1252 (windows-1252).
+    """
+    if not text:
+        return ""
+    s = str(text).strip()
+    try:
+        return s.encode('cp1252').decode('cp1252')
+    except UnicodeEncodeError:
+        s = s.replace('Đ', 'D').replace('đ', 'd')
+        s_norm = unicodedata.normalize('NFD', s)
+        s_clean = ''.join(c for c in s_norm if unicodedata.category(c) != 'Mn')
+        return s_clean.encode('cp1252', 'replace').decode('cp1252')
+
 def remove_vietnamese_accents(text: str) -> str:
     if not text:
         return ""
-    # Chuyển ký tự unicode dạng tổ hợp thành dựng sẵn và loại bỏ dấu
     text = unicodedata.normalize('NFD', text)
     text = ''.join(c for c in text if unicodedata.category(c) != 'Mn')
     text = text.replace('Đ', 'D').replace('đ', 'd')
-    # Giữ lại các chữ cái, chữ số và khoảng trắng
     text = re.sub(r'[^a-zA-Z0-9\s]', '', text)
     return text.strip().upper()
 
 def write_to_excel(template_path, output_path, extracted_data_list, global_defaults):
     """
     Đọc template (mẫu mới .xlsx), điền dữ liệu mới bắt đầu từ dòng 3 (dòng 2 là Header),
-    hoặc hỗ trợ cả file .xls cũ.
+    hoặc hỗ trợ cả file .xls cũ. Tất cả file Excel xuất ra tuân thủ chuẩn Code Page 1252 (windows-1252).
     """
     try:
         is_xlsx = False
@@ -165,6 +178,8 @@ def write_to_excel(template_path, output_path, extracted_data_list, global_defau
         rb = xlrd.open_workbook(template_path, formatting_info=True)
         sheet = rb.sheet_by_index(0)
         wb = copy(rb)
+        wb.encoding = 'cp1252'
+        wb._Workbook__codepage_rec = lambda: b'\x42\x00\x02\x00\xe4\x04'
         ws = wb.get_sheet(0)
         
         style = xlwt.XFStyle()

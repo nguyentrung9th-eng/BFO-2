@@ -16,7 +16,8 @@ export const getDesktopPath = async (): Promise<string> => {
 export const exportExcel = async (
   extractedInvoices: InvoiceData[], 
   globalConfig: GlobalConfigData, 
-  fileName: string
+  fileName: string,
+  formType: string = "trich_phi"
 ): Promise<{ success: boolean; blob?: Blob; error?: string }> => {
   try {
     const response = await fetch('/api/export', {
@@ -25,6 +26,7 @@ export const exportExcel = async (
       body: JSON.stringify({
         template_path: "",
         file_name: fileName,
+        form_type: formType,
         global_defaults: {
           "MaHoatDong": globalConfig.MaHoatDong,
           "TTChiuPhi": globalConfig.TTChiuPhi,

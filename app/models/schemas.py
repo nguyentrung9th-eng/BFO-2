@@ -16,7 +16,8 @@ class InvoiceData(BaseModel):
     Taxes: list[TaxLine] = []
 
 class ExportRequest(BaseModel):
-    template_path: str
+    template_path: str = ""
     file_name: str = ""
+    form_type: str = "trich_phi"  # "trich_phi" hoặc "bfo_thanh_toan"
     global_defaults: dict
     invoices: list[InvoiceData]

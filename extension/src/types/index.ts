@@ -26,3 +26,8 @@ export interface GlobalConfigData {
   KTPT: string;
   GhiChu: string;
 }
+
+export interface ExportOptions {
+  trichPhi: boolean;
+  bfoThanhToan: boolean;
+}
